@@ -1,24 +1,12 @@
 package org.example;
 
-import org.example.model.Expense;
-import org.example.utils.ExpenseDataLoader;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @SpringBootApplication
-public class Main implements CommandLineRunner {
+public class Main  {
 
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);
-    }
-
-    @Override
-    public void run(String... args) throws Exception {
-        List<Expense> expenses  = ExpenseDataLoader.getExpenses();
-        expenses.forEach(System.out::println);
     }
 }

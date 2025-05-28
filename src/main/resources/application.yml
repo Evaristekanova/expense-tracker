@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USER_NAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://ep-tiny-mountain-a8v7bfrs-pooler.eastus2.azure.neon.tech/expensedb?sslmode=require
+    username: neondb_owner
+    password: npg_gMh3zHAmDW7x
     driver-class-name: org.postgresql.Driver
 
   h2:
