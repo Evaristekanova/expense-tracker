@@ -34,7 +34,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             email = jwtUtil.getUsername(token);
 
         }else {
-            System.out.println("There is no bearer token");
+
+            System.out.println("There is no bearer token: "+ authHeader);
         }
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             var userDetails = userDetailsService.loadUserByUsername(email);

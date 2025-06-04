@@ -2,7 +2,6 @@ package org.example.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -15,19 +14,24 @@ public class JwtUtil {
 
     private final SecretKey SECRET_KEY = Jwts.SIG.HS256.key().build();
 
-    private String generateToken(String username) {
+    public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
+        System.out.println("Secret key: " + SECRET_KEY);
         return Jwts.builder()
                 .claims(claims)
                 .subject(username)
-                .issuedAt( new Date(System.currentTimeMillis()))
+                .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
                 .signWith(SECRET_KEY)
-                .compact();
+               .compact();
     }
 
     public Claims extractClaims(String token) {
-        return Jwts.parser().verifyWith(SECRET_KEY).build().parseSignedClaims(token).getPayload();
+        return Jwts.parser()
+                .verifyWith(SECRET_KEY)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public String getUsername(String token) {
@@ -40,7 +44,6 @@ public class JwtUtil {
 
     public boolean validateToken(String token, String username) {
         String extractedUsername = getUsername(token);
-        return (extractedUsername.equals(username) && isTokenExpired(token));
+        return extractedUsername.equals(username) && !isTokenExpired(token);
     }
-
 }

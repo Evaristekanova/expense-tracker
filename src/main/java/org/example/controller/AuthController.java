@@ -1,12 +1,10 @@
 package org.example.controller;
 
 import org.example.dto.AuthDto;
+import org.example.dto.AuthResponseDTO;
 import org.example.dto.UserDto;
-import org.example.model.AppUser;
-import org.example.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.service.AuthService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,31 +12,27 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AuthController {
 
-    private UserService userService;
-    private PasswordEncoder passwordEncoder;
+    private final AuthService authService;
 
-    public AuthController(PasswordEncoder passwordEncoder, UserService userService) {
-        this.passwordEncoder = passwordEncoder;
-        this.userService = userService;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody UserDto userDto) {
-        if (userService.findUserByEmail(userDto.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("Email Already Exists");
+    public ResponseEntity<AuthResponseDTO> register(@RequestBody UserDto userDto) {
+        AuthResponseDTO response = authService.register(userDto);
+        if (response.getToken() != null) {
+            return ResponseEntity.ok(response);
         }
-        AppUser appUser = new AppUser();
-        appUser.setEmail(userDto.getEmail());
-        appUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        appUser.setFullName(userDto.getFullName());
-
-        userService.createUser(appUser);
-        return ResponseEntity.ok("User created");
+        return ResponseEntity.badRequest().body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody AuthDto authDto) {
-        userService.findUserByEmail(authDto.getEmail());
-        return ResponseEntity.ok("Login Successfully");
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthDto authDto) {
+        AuthResponseDTO response = authService.login(authDto);
+        if (response.getToken() != null) {
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.badRequest().body(response);
     }
 }
