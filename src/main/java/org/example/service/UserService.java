@@ -8,4 +8,5 @@ public interface UserService {
 
     AppUser createUser(AppUser user);
     Optional<AppUser> findUserByEmail(String email);
+    Optional<AppUser> findUserById(String id);
 }

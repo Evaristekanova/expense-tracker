@@ -20,6 +20,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<AppUser> findUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+        return Optional.ofNullable(userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found")));
+    }
+
+
+    @Override
+    public Optional<AppUser> findUserById(String id) {
+        return userRepository.findById(id);
     }
 }

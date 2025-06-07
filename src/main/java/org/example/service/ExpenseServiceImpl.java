@@ -1,10 +1,12 @@
 package org.example.service;
 
+import org.example.model.AppUser;
 import org.example.model.Expense;
 import org.example.repository.ExpenseRepository;
 import org.example.utils.ExpenseDataLoader;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,24 +15,31 @@ import java.util.Optional;
 public class ExpenseServiceImpl implements ExpenseService {
 
     private final ExpenseRepository expenseRepository;
+    private final UserService userService;
 
-    public ExpenseServiceImpl(ExpenseRepository expenseRepository) {
+    public ExpenseServiceImpl(ExpenseRepository expenseRepository, UserService userService) {
         this.expenseRepository = expenseRepository;
+        this.userService = userService;
     }
 
     @Override
-    public List<Expense> getExpenseByDay(String data) {
-        return expenseRepository.findAll().stream().filter(expense -> expense.getDate().equalsIgnoreCase(data)).toList();
+    public List<Expense> getUserExpenses(String userId) {
+        return new ArrayList<>(expenseRepository.findByUserIdOrderByDateDesc(userId));
     }
 
     @Override
-    public List<Expense> getExpenseByCategoryAndMonth(String category, String month) {
-        return expenseRepository.findAll().stream().filter(expense -> expense.getCategory().equalsIgnoreCase(category) && expense.getDate().startsWith(month)).toList();
+    public List<Expense> getExpenseByDay(String date, String userId) {
+        return expenseRepository.findByUserIdOrderByDateDesc(userId).stream().filter(expense -> expense.getDate().equals(date)).toList();
     }
 
     @Override
-    public List<String> getExpenseCategories() {
-        return expenseRepository.findAll().stream().map(Expense::getCategory).distinct().toList();
+    public List<Expense> getExpenseByCategoryAndMonth(String category, String month, String userId) {
+        return expenseRepository.findByUserIdOrderByDateDesc(userId).stream().filter(expense -> expense.getCategory().equalsIgnoreCase(category) && expense.getDate().startsWith(month)).toList();
+    }
+
+    @Override
+    public List<String> getExpenseCategories(String userId) {
+        return expenseRepository.findByUserIdOrderByDateDesc(userId).stream().map(Expense::getCategory).distinct().toList();
     }
 
     @Override
@@ -39,19 +48,27 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public Optional<Expense> getExpenseById(Long id) {
-        return expenseRepository.findById(String.valueOf(id)).stream().filter(expense -> Objects.equals(expense.getId(), id)).findFirst();
+    public Optional<Expense> getExpenseById(Long id, String userId) {
+        return expenseRepository.findExpenseByIdAndUserId(id, userId).stream().filter(expense -> Objects.equals(expense.getId(), id)).findFirst();
     }
 
     @Override
-    public Expense addExpense(Expense expense) {
-        expenseRepository.save(expense);
-        return expense;
+    public Expense addExpense(Expense expense, String userId) {
+        Optional<AppUser> userOptional = userService.findUserById(userId);
+        if (userOptional.isPresent()) {
+            AppUser user = userOptional.get();
+            expense.setUser(user);
+            return expenseRepository.save(expense);
+        }else {
+            throw new RuntimeException("User not found");
+        }
     }
 
     @Override
-    public boolean updateExpense(Expense expense) {
-        if (expenseRepository.existsById(String.valueOf(expense.getId()))) {
+    public boolean updateExpense(Expense expense, String userId) {
+        Optional<Expense> existingExpense = expenseRepository.findExpenseByIdAndUserId(expense.getId(), userId);
+        if (existingExpense.isPresent()) {
+            expense.setUser(existingExpense.get().getUser());
             expenseRepository.save(expense);
             return true;
         }else {
@@ -61,11 +78,13 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public boolean deleteExpense(Long id) {
-        if (expenseRepository.existsById(String.valueOf(id))) {
-            expenseRepository.deleteById(String.valueOf(id));
+    public boolean deleteExpense(Long id, String userId) {
+        Optional<Expense> existingExpense = expenseRepository.findExpenseByIdAndUserId(id, userId);
+        if (existingExpense.isPresent()) {
+
+            expenseRepository.deleteById(id);
             return true;
-        }else{
+        }else {
             return false;
         }
     }
